@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>ShivAI</title>
+		<style>
+			body {
+				background: #0d1117;
+				color: #fff;
+				font-family: Arial, sans-serif;
+				display: flex;
+				justify-content: center;
+				padding: 40px;
+			}
+			.app {
+				width: 100%;
+				max-width: 700px;
+				background: #161b22;
+				border-radius: 20px;
+				padding: 20px;
+				box-shadow: 0 0 30px rgba(0, 0, 0, 0.4);
+			}
+
+			/* Tabs */
+			.tab-nav {
+				display: flex;
+				gap: 10px;
+				margin-bottom: 20px;
+			}
+			.tab-btn {
+				flex: 1;
+				padding: 12px;
+				border: none;
+				border-radius: 12px;
+				background: rgba(255, 255, 255, 0.1);
+				color: white;
+				cursor: pointer;
+				font-size: 16px;
+				transition: 0.2s;
+			}
+			.tab-btn.active {
+				background: linear-gradient(135deg, #4a9eff 0%, #0066cc 100%);
+				box-shadow: 0 4px 15px rgba(74, 158, 255, 0.3);
+			}
+			.tab-content {
+				display: none;
+			}
+			.tab-content.active {
+				display: block;
+			}
+
+			/* File Upload */
+			.upload-section {
+				margin-bottom: 20px;
+			}
+			.file-upload-area {
+				border: 2px dashed rgba(255, 255, 255, 0.2);
+				padding: 30px;
+				border-radius: 12px;
+				text-align: center;
+				cursor: pointer;
+				transition: 0.2s;
+			}
+			.file-upload-area:hover {
+				border-color: #4a9eff;
+				background: rgba(74, 158, 255, 0.1);
+			}
+			.upload-icon {
+				font-size: 40px;
+			}
+			.upload-text {
+				margin-top: 10px;
+				font-size: 16px;
+			}
+			.upload-subtext {
+				font-size: 13px;
+				opacity: 0.7;
+			}
+			input[type="file"] {
+				display: none;
+			}
+
+			/* Chat UI */
+			.chat-container {
+				margin-bottom: 20px;
+			}
+			.chat-input-area {
+				display: flex;
+				align-items: center;
+				background: rgba(255, 255, 255, 0.05);
+				border-radius: 12px;
+				padding: 10px;
+			}
+			.chat-input {
+				flex: 1;
+				border: none;
+				outline: none;
+				background: transparent;
+				color: white;
+				font-size: 15px;
+				resize: none;
+				min-height: 40px;
+			}
+			.input-controls {
+				display: flex;
+				gap: 10px;
+				margin-left: 10px;
+			}
+			.control-btn {
+				background: #4a9eff;
+				border-radius: 50%;
+				width: 40px;
+				height: 40px;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				cursor: pointer;
+				transition: 0.2s;
+			}
+			.control-btn:hover {
+				background: #0066cc;
+			}
+
+			/* Response Box */
+			.response-area {
+				margin-top: 10px;
+			}
+			.response-box {
+				background: rgba(255, 255, 255, 0.05);
+				border-radius: 12px;
+				padding: 15px;
+				margin-top: 10px;
+			}
+			.upload-status {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+			}
+			.status-icon {
+				font-size: 20px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="app">
+			<!-- Tabs -->
+			<div class="tab-nav">
+				<button class="tab-btn active" onclick="showTab('rag')">
+					📄 RAG Assistant
+				</button>
+				<button class="tab-btn" onclick="showTab('chatbot')">💬 Chatbot</button>
+			</div>
+
+			<!-- RAG Assistant Tab -->
+			<div id="ragTab" class="tab-content active">
+				<!-- Upload -->
+				<div class="upload-section">
+					<div
+						class="file-upload-area"
+						onclick="document.getElementById('pdfInput').click()"
+					>
+						<div class="upload-icon">📄</div>
+						<div class="upload-text">Click to upload PDF or drag and drop</div>
+						<div class="upload-subtext">PDF files only</div>
+					</div>
+					<input
+						type="file"
+						id="pdfInput"
+						accept=".pdf"
+						onchange="handleFileSelect(event)"
+					/>
+				</div>
+
+				<!-- Chat -->
+				<div class="chat-container">
+					<div class="chat-input-area">
+						<textarea
+							id="ragInput"
+							class="chat-input"
+							placeholder="Ask about your documents..."
+							rows="1"
+						></textarea>
+						<div class="input-controls">
+							<div class="control-btn" onclick="askQuery('rag')" title="Send">
+								➡️
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="response-area">
+					<div
+						id="uploadMessage"
+						class="response-box"
+						style="display: none"
+					></div>
+					<div
+						id="ragResponse"
+						class="response-box"
+						style="display: none"
+					></div>
+				</div>
+			</div>
+
+			<!-- Chatbot Tab -->
+			<div id="chatbotTab" class="tab-content">
+				<div class="chat-container">
+					<div class="chat-input-area">
+						<textarea
+							id="chatbotInput"
+							class="chat-input"
+							placeholder="Chat with AI..."
+							rows="1"
+						></textarea>
+						<div class="input-controls">
+							<div
+								class="control-btn"
+								onclick="askQuery('chatbot')"
+								title="Send"
+							>
+								➡️
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="response-area">
+					<div
+						id="chatbotResponse"
+						class="response-box"
+						style="display: none"
+					></div>
+				</div>
+			</div>
+		</div>
+
+		<script>
+			const API_BASE = "https://shivai-p0js.onrender.com";
+
+			function showTab(tab) {
+				document
+					.querySelectorAll(".tab-btn")
+					.forEach((btn) => btn.classList.remove("active"));
+				document
+					.querySelectorAll(".tab-content")
+					.forEach((tc) => tc.classList.remove("active"));
+				if (tab === "rag") {
+					document
+						.querySelector(".tab-btn:nth-child(1)")
+						.classList.add("active");
+					document.getElementById("ragTab").classList.add("active");
+				} else {
+					document
+						.querySelector(".tab-btn:nth-child(2)")
+						.classList.add("active");
+					document.getElementById("chatbotTab").classList.add("active");
+				}
+			}
+
+			async function handleFileSelect(event) {
+				const file = event.target.files[0];
+				if (!file) return;
+
+				const formData = new FormData();
+				formData.append("file", file);
+
+				const uploadMsg = document.getElementById("uploadMessage");
+				uploadMsg.style.display = "block";
+				uploadMsg.innerHTML = `<div class="upload-status"><span class="status-icon">⏳</span><span>Uploading...</span></div>`;
+
+				try {
+					const res = await fetch(`${API_BASE}/upload_rag`, {
+						method: "POST",
+						body: formData,
+					});
+					const data = await res.json();
+
+					if (data.error) {
+						uploadMsg.innerHTML = `<div class="upload-status"><span class="status-icon">❌</span><span>${data.error}</span></div>`;
+					} else {
+						uploadMsg.innerHTML = `<div class="upload-status"><span class="status-icon">✅</span><span>${data.message}</span></div>`;
+					}
+				} catch (err) {
+					uploadMsg.innerHTML = `<div class="upload-status"><span class="status-icon">❌</span><span>Upload failed</span></div>`;
+				}
+			}
+
+			async function askQuery(mode) {
+				const inputId = mode === "rag" ? "ragInput" : "chatbotInput";
+				const responseId = mode === "rag" ? "ragResponse" : "chatbotResponse";
+				const endpoint = mode === "rag" ? "/rag_query" : "/chatbot";
+
+				const queryInput = document.getElementById(inputId);
+				const responseBox = document.getElementById(responseId);
+				const query = queryInput.value.trim();
+				if (!query) return;
+
+				responseBox.style.display = "block";
+				responseBox.innerHTML = `<div class="upload-status"><span class="status-icon">🤔</span><span>Thinking...</span></div>`;
+
+				try {
+					const res = await fetch(`${API_BASE}${endpoint}`, {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ query }),
+					});
+					const data = await res.json();
+
+					if (data.error) {
+						responseBox.innerHTML = `<div class="upload-status"><span class="status-icon">❌</span><span>${data.error}</span></div>`;
+					} else {
+						responseBox.innerHTML = `
+                        <div class="upload-status"><span class="status-icon">🤖</span><span>AI Response:</span></div>
+                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">${data.response}</div>
+                    `;
+						queryInput.value = "";
+					}
+				} catch (err) {
+					responseBox.innerHTML = `<div class="upload-status"><span class="status-icon">❌</span><span>Error fetching response</span></div>`;
+				}
+			}
+			// prevent Enter from refreshing the page in textareas
+			["ragInput", "chatbotInput"].forEach((id) => {
+				const input = document.getElementById(id);
+				input.addEventListener("keydown", (e) => {
+					if (e.key === "Enter" && !e.shiftKey) {
+						e.preventDefault(); // stops form-like submission
+						const mode = id === "ragInput" ? "rag" : "chatbot";
+						askQuery(mode);
+					}
+				});
+			});
+		</script>
+	</body>
+</html>
